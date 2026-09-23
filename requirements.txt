@@ -1,0 +1,8 @@
+# SCA Test: Vulnerable versions
+flask==0.12.2          # CVE-2018-1000656 (DoS) and others
+requests==2.20.0       # CVE-2018-18074 (Credential leak on redirect)
+django==2.2            # Multiple Critical CVEs (SQL Injection, XSS)
+jinja2==2.10           # CVE-2019-10906 (SSTI vulnerability)
+pyyaml==3.12           # CVE-2017-18342 (Arbitrary Code Execution via yaml.load)
+pillow==10.0.0         # CVE-2023-44271 (Buffer Overflow)
+pypdf==3.0.0           # CVE-2026-27628 (Infinite Loop/DoS)
