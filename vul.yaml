@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: research-vessel-pod
+spec:
+  containers:
+  - name: abyssal-explorer
+    image: orcacdrdemos.azurecr.io/sensimtask:latest
+    # FAIL 1: Container running as root
+    securityContext:
+      runAsUser: 0
+      privileged: true # FAIL 2: Privileged mode allows container escape
+      allowPrivilegeEscalation: true
+    
+    # FAIL 3: No resource limits (can lead to DoS of the node)
+    resources: {} 
+
+    # FAIL 4: Host network access
+    hostNetwork: true
