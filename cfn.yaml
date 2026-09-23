@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  DBPassword:
+    Type: String
+    # FAIL 10: Missing 'NoEcho' attribute (password will show in logs)
+    Description: Password for the database
+
+Resources:
+  InsecureEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t2.micro
+      # FAIL 11: IMDSv1 enabled (vulnerable to SSRF)
+      MetadataOptions:
+        HttpTokens: optional
+
+  UnencryptedBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: cf-leaked-secrets
+      # FAIL 12: No ServerSideEncryptionConfiguration defined
