@@ -1,0 +1,132 @@
+# INTENTIONALLY MISCONFIGURED KUBERNETES MANIFEST
+# Triggers: IaC scan for Kubernetes misconfigurations
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulnerable-app
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vulnerable-app
+  template:
+    metadata:
+      labels:
+        app: vulnerable-app
+    spec:
+      # Running as root - critical security finding
+      securityContext: {}
+
+      containers:
+        - name: vulnerable-app
+          image: python:3.8          # unpinned - no digest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 4499
+            - containerPort: 22      # SSH port exposed in container
+
+          # Hardcoded secrets as env vars
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: "AKIAIOSFODNN7EXAMPLE"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+            - name: DB_PASSWORD
+              value: "SuperSecret@Password123!"
+            - name: GITHUB_TOKEN
+              value: "ghp_1234567890abcdefghijklmnopqrstuvwxyz12"
+            - name: STRIPE_KEY
+              value: "sk_live_4eC39HqLyjWDarjtT1zdp7dc"
+
+          # No resource limits - can consume all node resources
+          # resources: {}  <- intentionally missing
+
+          # No security context - runs as root
+          securityContext:
+            privileged: true                   # privileged container
+            allowPrivilegeEscalation: true     # can escalate privileges
+            runAsRoot: true
+            readOnlyRootFilesystem: false      # writable root fs
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_ADMIN
+                - ALL                         # all capabilities added
+
+          # No liveness or readiness probes
+
+          # Volume mount of entire host filesystem
+          volumeMounts:
+            - name: host-root
+              mountPath: /host
+            - name: docker-sock
+              mountPath: /var/run/docker.sock  # docker socket exposed
+
+      # No service account restrictions
+      serviceAccountName: default
+      automountServiceAccountToken: true   # SA token auto-mounted
+
+      volumes:
+        # Host filesystem mounted - container escape risk
+        - name: host-root
+          hostPath:
+            path: /
+            type: Directory
+        # Docker socket mounted - full docker access from container
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+
+      # Host networking - bypasses network isolation
+      hostNetwork: true
+      hostPID: true      # shares host PID namespace
+      hostIPC: true      # shares host IPC namespace
+
+---
+# Cluster role with excessive permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: overpermissive-role
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs:     ["*"]     # all verbs on all resources
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: overpermissive-binding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: overpermissive-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Service exposed as LoadBalancer unnecessarily
+apiVersion: v1
+kind: Service
+metadata:
+  name: vulnerable-service
+spec:
+  type: LoadBalancer     # public LB - exposed to internet
+  selector:
+    app: vulnerable-app
+  ports:
+    - name: app
+      port: 80
+      targetPort: 4499
+    - name: ssh
+      port: 22           # SSH port exposed externally
+      targetPort: 22
+    - name: debug
+      port: 5678         # debug port exposed externally
+      targetPort: 5678
