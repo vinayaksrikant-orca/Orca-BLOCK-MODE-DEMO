@@ -1,0 +1,28 @@
+# Vulnerable versions - triggers SCA/vulnerability scan
+flask==0.12.2               # CVE-2018-1000656, CVE-2023-30861
+requests==2.18.0            # CVE-2018-18074
+pyyaml==5.3                 # CVE-2020-14343 - arbitrary code execution
+jinja2==2.10                # CVE-2019-10906, CVE-2019-8341
+werkzeug==0.14.1            # CVE-2019-14806, CVE-2023-23934
+cryptography==2.1.4         # multiple CVEs - old version
+paramiko==2.0.8             # CVE-2018-1000805 - authentication bypass
+urllib3==1.22               # CVE-2018-20060, CVE-2019-11236, CVE-2023-43804
+pillow==5.0.0               # CVE-2021-25287, CVE-2021-34552 - multiple CVEs
+sqlalchemy==0.9.9           # very old version with known issues
+django==2.0                 # CVE-2019-14232, CVE-2019-14233 - multiple CVEs
+celery==3.1.17              # old version with known CVEs
+redis==2.10.5               # old version
+boto3==1.4.0                # very old version
+
+# GPL-licensed packages (triggers OSS License scan)
+# GPL-2.0 - copyleft - cannot use in closed commercial products
+mysqlclient==2.1.1          # GPL-2.0
+gnupg==2.3.1                # GPL-3.0
+python-magic==0.4.27        # LGPL-2.1 - copyleft
+psutil==5.9.5               # BSD-3 (fine)
+
+# AGPL licensed - strongest copyleft
+# sympy==1.12              # GPL-3.0 mixed
+
+# Packages with dual licensing pitfalls
+psycopg2==2.9.7             # LGPL
